@@ -4,7 +4,7 @@
 #
 
 apt-get update
-apt-get install -y apt-transport-https ca-certificates curl gnupgt software-properties-common
+apt-get install -y apt-transport-https ca-certificates curl gnupg software-properties-common
 curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 apt-key fingerprint 0EBFCD88
 echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
