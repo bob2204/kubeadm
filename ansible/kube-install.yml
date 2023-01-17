@@ -1,0 +1,58 @@
+---
+- name: Installation/configuration d'un cluster K8S
+  hosts: nodes
+  become: true
+
+  tasks: 
+    - name: Paramétrage du noyau
+      include_tasks: kernel-param.yml
+
+    - name: Désactivation du swap
+      include_tasks: swapoff.yml
+
+    - name: Récupération key docker
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/docker.gpg
+
+    - name: Repository Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_lsb.codename }} stable"
+        state: present
+
+    - name: Installation de containerd
+      apt:
+        name: containerd.io
+        update_cache: true
+
+    - name: Configuration par défaut de containerd
+      command: containerd config default
+      register: containerd_config_default
+      changed_when: false
+      when: containerd_config_default_do
+
+    - name: Configuration de containerd
+      copy:
+        content: "{{ containerd_config_default.stdout }}"
+        dest: /etc/containerd/config.toml
+      changed_when: false
+      when: containerd_config_default_do
+
+    - name: Paramétrage du driver Cgroup pour containerd
+      lineinfile:
+        regex: SystemdCgroup = false
+        line: '          SystemdCgroup = true'
+        state: present
+        dest: /etc/containerd/config.toml
+
+    - name: Clé du repo pour kubeadm, kubelet ete kubectl
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/kubernetes.gpg
+
+    - name: Repository pour installation kubeadm, kubelet et kubectl
+      apt_repository:
+        repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+        state: present

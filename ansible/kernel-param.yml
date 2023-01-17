@@ -1,0 +1,32 @@
+# Paramétrage du noyau
+
+- name: Chargement de modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Fichier /etc/modules-load.d/containerd.conf
+  copy:
+    content: |
+      overlay
+      br_netfilter
+    dest: /etc/modules-load.d/containerd.conf
+
+- name: Paramètre sysctl
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    reload: yes
+    state: present
+    sysctl_file: /etc/sysctl.d/99-kubernetes-k8s.conf
+  loop:
+    - name: net.bridge.bridge-nf-call-iptables
+      value: 1
+    - name: net.ipv4.ip_forward
+      value: 1
+    - name: net.bridge.bridge-nf-call-ip6tables
+      value: 1
+

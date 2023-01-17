@@ -1,0 +1,14 @@
+# Désactivation du swap
+#
+
+- name: Désactivation swap dans /etc/fstab
+  lineinfile:
+    state: present
+    backrefs: true
+    regex: ^(.*swap.*)
+    line: #\1
+    dest: /etc/fstab
+
+- name: Désactivation du swap
+  shell: swapoff -a
+
